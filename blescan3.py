@@ -1,7 +1,7 @@
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # JCS 06/07/14
 
-DEBUG = True
+DEBUG = False
 # BLE scanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # BLE scanner, based on https://code.google.com/p/pybluez/source/browse/trunk/examples/advanced/inquiry-with-rssi.py
 
@@ -171,18 +171,24 @@ def parse_events(sock, loop_count=100):
                         rssi = struct.unpack("b", bytes([pkt[report_pkt_offset -1]])) #struct.unpack("b", pkt[report_pkt_offset -1])
                         print("\tRSSI:", rssi)
                     # build the return string
+
+                    #
                     Adstring = packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
-                    Adstring += ","
+                    Adstring += ", UDID: "
                     Adstring += returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6]) 
-                    Adstring += ","
+                    Adstring += ", MAJOR: "
                     Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4]) 
-                    Adstring += ","
+                    Adstring += ", MINOR: "
                     Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2]) 
                     Adstring += ","
                     Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset -2]])) #bluetooth.get_byte(pkt[report_pkt_offset -2]) #struct.unpack("b", pkt[report_pkt_offset -2]) #<---------- CHECK THIS IF NOT WORK
-                    Adstring += ","
+                    Adstring += ", MAC address: "
+                    Adstring += packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
+                    Adstring += ", RSSI: "
                     Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset -1]])) #bluetooth.get_byte(pkt[report_pkt_offset -1]) #struct.unpack("b", pkt[report_pkt_offset -1]) #<---------- CHECK THIS IF NOT WORK
-
+                    Adstring += "\n"
+                    Adstring += "\t" + str(pkt)
+                    Adstring += "\n"
                     #print("\tAdstring=", Adstring)
                     myFullList.append(Adstring)
                 done = True
