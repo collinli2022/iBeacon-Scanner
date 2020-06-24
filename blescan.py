@@ -1,7 +1,7 @@
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # JCS 06/07/14
 
-DEBUG = False
+DEBUG = True
 # BLE scanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
 # BLE scanner, based on https://code.google.com/p/pybluez/source/browse/trunk/examples/advanced/inquiry-with-rssi.py
 
@@ -18,6 +18,7 @@ DEBUG = False
 import os
 import sys
 import struct
+import bluetooth
 import bluetooth._bluetooth as bluez
 
 LE_META_EVENT = 0x3e
@@ -138,12 +139,14 @@ def parse_events(sock, loop_count=100):
             i =0 
         elif event == LE_META_EVENT:
             subevent, = struct.unpack("B", pkt[3])
+            print("AAAA", pkt[3], subevent, struct.unpack("B", pkt[3]), struct.unpack("b", pkt[3]))
             pkt = pkt[4:]
             if subevent == EVT_LE_CONN_COMPLETE:
                 le_handle_connection_complete(pkt)
             elif subevent == EVT_LE_ADVERTISING_REPORT:
                 #print "advertising report"
                 num_reports = struct.unpack("B", pkt[0])[0]
+                print("BBB", pkt[0], num_reports, struct.unpack("B", pkt[0]), struct.unpack("b", pkt[0]))
                 report_pkt_offset = 0
                 for i in range(0, num_reports):
         
@@ -172,7 +175,6 @@ def parse_events(sock, loop_count=100):
                     Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -2])
                     Adstring += ","
                     Adstring += "%i" % struct.unpack("b", pkt[report_pkt_offset -1])
-
                     #print "\tAdstring=", Adstring
                     myFullList.append(Adstring)
                 done = True
