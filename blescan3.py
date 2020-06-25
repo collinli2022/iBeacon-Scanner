@@ -172,8 +172,10 @@ def parse_events(sock, loop_count=100):
                         print("\tRSSI:", rssi)
                     # build the return string
 
-                    #
-                    Adstring = packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
+                    Adstring = "Name: "
+                    Adstring += str(pkt).split('x')[-2]
+                    Adstring += ", MAC: "
+                    Adstring += packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
                     Adstring += ", UDID: "
                     Adstring += returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6]) 
                     Adstring += ", MAJOR: "
@@ -182,13 +184,13 @@ def parse_events(sock, loop_count=100):
                     Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2]) 
                     Adstring += ","
                     Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset -2]])) #bluetooth.get_byte(pkt[report_pkt_offset -2]) #struct.unpack("b", pkt[report_pkt_offset -2]) #<---------- CHECK THIS IF NOT WORK
-                    Adstring += ", MAC address: "
-                    Adstring += packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
                     Adstring += ", RSSI: "
                     Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset -1]])) #bluetooth.get_byte(pkt[report_pkt_offset -1]) #struct.unpack("b", pkt[report_pkt_offset -1]) #<---------- CHECK THIS IF NOT WORK
+                    '''
                     Adstring += "\n"
                     Adstring += "\t" + str(pkt)
                     Adstring += "\n"
+                    '''
                     #print("\tAdstring=", Adstring)
                     myFullList.append(Adstring)
                 done = True
