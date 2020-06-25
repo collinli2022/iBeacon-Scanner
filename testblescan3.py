@@ -11,7 +11,12 @@ from datetime import datetime
 from itertools import zip_longest
 
 ## GLOBAL VARS
-timeout = 1
+timeout = 30
+
+def getDistance(measuredPower, RSSI, environment): # https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
+    # environment MUST be between 2-4
+    return 10 ** ( ( measuredPower - RSSI )/( 10 * environment ) ) 
+
 
 def process_scans(scans, timestamps):
         """Process collection of received beacon advertisement scans.
@@ -42,10 +47,11 @@ def process_scans(scans, timestamps):
                 advertisement['MINOR'] = payload[4]
                 advertisement['MAYBE TX POWER'] = payload[5][0]
                 advertisement['RSSI'] = payload[6][0]
+                advertisement['DISTANCE in feet'] = getDistance(-69, payload[6][0], 2)
                 advertisements.append(advertisement)
         # Format into DataFrame
         return  pd.DataFrame(advertisements,columns=['TIMESTAMP', 
-            'NAME', 'MAC', 'UUID', 'MAJOR', 'MINOR', 'MAYBE TX POWER', 'RSSI'])
+            'NAME', 'MAC', 'UUID', 'MAJOR', 'MINOR', 'MAYBE TX POWER', 'RSSI', 'DISTANCE in feet'])
 
 dev_id = 0
 
