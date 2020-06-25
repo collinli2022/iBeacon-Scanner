@@ -126,7 +126,7 @@ def parse_events(sock, loop_count=100):
     bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
     done = False
-    results = []
+    allResults = []
     myFullList = []
     for i in range(0, loop_count):
         pkt = sock.recv(255)
@@ -171,21 +171,28 @@ def parse_events(sock, loop_count=100):
                         rssi = struct.unpack("b", bytes([pkt[report_pkt_offset -1]])) #struct.unpack("b", pkt[report_pkt_offset -1])
                         print("\tRSSI:", rssi)
                     # build the return string
-
+                    results = []
                     Adstring = "Name: "
                     Adstring += str(pkt).split('x')[-2]
+                    results.append(str(pkt).split('x')[-2])
                     Adstring += ", MAC: "
                     Adstring += packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9])
+                    results.append(packed_bdaddr_to_string(pkt[report_pkt_offset + 3:report_pkt_offset + 9]))
                     Adstring += ", UDID: "
-                    Adstring += returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6]) 
+                    Adstring += returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6])
+                    results.append(returnstringpacket(pkt[report_pkt_offset -22: report_pkt_offset - 6]))
                     Adstring += ", MAJOR: "
                     Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4]) 
+                    results.append(returnnumberpacket(pkt[report_pkt_offset -6: report_pkt_offset - 4]) )
                     Adstring += ", MINOR: "
-                    Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2]) 
+                    Adstring += "%i" % returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2])
+                    results.append(returnnumberpacket(pkt[report_pkt_offset -4: report_pkt_offset - 2]))
                     Adstring += ","
                     Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset -2]])) #bluetooth.get_byte(pkt[report_pkt_offset -2]) #struct.unpack("b", pkt[report_pkt_offset -2]) #<---------- CHECK THIS IF NOT WORK
+                    results.append(struct.unpack("b", bytes([pkt[report_pkt_offset -2]])))
                     Adstring += ", RSSI: "
                     Adstring += "%i" % struct.unpack("b", bytes([pkt[report_pkt_offset -1]])) #bluetooth.get_byte(pkt[report_pkt_offset -1]) #struct.unpack("b", pkt[report_pkt_offset -1]) #<---------- CHECK THIS IF NOT WORK
+                    results.append(struct.unpack("b", bytes([pkt[report_pkt_offset -1]])))
                     '''
                     Adstring += "\n"
                     Adstring += "\t" + str(pkt)
@@ -193,7 +200,8 @@ def parse_events(sock, loop_count=100):
                     '''
                     #print("\tAdstring=", Adstring)
                     myFullList.append(Adstring)
+                    allResults.append(results)
                 done = True
     sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
-    return myFullList
+    return myFullList, allResults
 
