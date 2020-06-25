@@ -3,10 +3,17 @@
 
 import blescan3
 import sys
-
+import time
 import bluetooth._bluetooth as bluez
+import pandas as pd
+from pathlib import Path
+from datetime import datetime
+from itertools import zip_longest
 
-def process_scans(self, scans, timestamps):
+## GLOBAL VARS
+timeout = 1
+
+def process_scans(scans, timestamps):
         """Process collection of received beacon advertisement scans.
         
         Organize collection of received beacon advertisement scans according 
@@ -26,21 +33,23 @@ def process_scans(self, scans, timestamps):
         # Collect all advertisements
         advertisements = []
         for (scan, timestamp) in zip_longest(scans, timestamps):
-            for address, payload in scan.items():
-                advertisement = {'ADDRESS': address, 'TIMESTAMP': timestamp}
+            for payload in scan:
+                advertisement = {'TIMESTAMP': timestamp}
                 advertisement['NAME'] = payload[0]
                 advertisement['MAC'] = payload[1]
                 advertisement['UUID'] = payload[2]
                 advertisement['MAJOR'] = payload[3]
                 advertisement['MINOR'] = payload[4]
-                advertisement['Uhh'] = payload[5]
-                advertisement['RSSI'] = payload[6]
+                advertisement['MAYBE TX POWER'] = payload[5][0]
+                advertisement['RSSI'] = payload[6][0]
                 advertisements.append(advertisement)
         # Format into DataFrame
-        return  pd.DataFrame(advertisements,columns=['ADDRESS', 'TIMESTAMP', 
-            'UUID', 'MAJOR', 'MINOR', 'TX POWER', 'RSSI'])
+        return  pd.DataFrame(advertisements,columns=['TIMESTAMP', 
+            'NAME', 'MAC', 'UUID', 'MAJOR', 'MINOR', 'MAYBE TX POWER', 'RSSI'])
 
 dev_id = 0
+
+
 try:
     sock = bluez.hci_open_dev(dev_id)
     print("ble thread started")
@@ -52,12 +61,62 @@ except:
 blescan3.hci_le_set_scan_parameters(sock)
 blescan3.hci_enable_le_scan(sock)
 
-while True:
-    returnedList,results = blescan3.parse_events(sock, 10)
-    print(results)
-    print("----------")
-    for beacon in returnedList:
-        print(beacon)
 
-    for beacon in results:
+# initialize csv
+scan_prefix = "scan"
+scan_file = Path(f"{scan_prefix}_{datetime.now():%Y%m%dT%H%M%S}.csv")
 
+value = 'key_control'
+
+# Initialize control file
+control_file = Path(value).resolve()
+control_file.touch()
+control_file.chmod(0o777)
+with control_file.open(mode='w') as f:
+    f.write("1")
+
+control_file_handle = None
+
+with open(control_file, 'w') as f:
+    f.write("1")
+
+control_file_handle = control_file.open(mode='r+')
+
+timestamps = []
+scans = []
+scan_count = 0
+start_time = time.monotonic()
+
+run = True
+while run:
+
+    # off(0) or on(1)
+    control_file_handle.seek(0)
+    control_flag = control_file_handle.read()
+
+    if (time.monotonic()-start_time) > timeout:
+        run = False
+        print('done')
+
+    if control_flag == "0":
+        run = False
+        print('done')
+    if control_flag == "1":
+        timestamps.append(datetime.now())
+        returnedList, results = blescan3.parse_events(sock, 10)
+        print(results)
+        print("----------")
+        '''
+        for beacon in returnedList:
+            print(beacon)
+        '''
+        scans.append(results)
+    if control_flag == "2":
+        continue
+
+advertisements = process_scans(scans, timestamps)
+#advertisements = filter_advertisements(advertisements)
+advertisements.to_csv(scan_file, index_label='SCAN')
+if control_file_handle is not None:
+    control_file_handle.close()
+control_file.unlink()
