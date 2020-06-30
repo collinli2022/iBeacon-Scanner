@@ -11,7 +11,7 @@ from datetime import datetime
 from itertools import zip_longest
 
 ## GLOBAL VARS
-timeout = 30
+timeout = 10
 
 def getDistance(measuredPower, RSSI, environment): # https://iotandelectronics.wordpress.com/2016/10/07/how-to-calculate-distance-from-the-rssi-value-of-the-ble-beacon/
     # environment MUST be between 2-4
@@ -110,12 +110,9 @@ while run:
     if control_flag == "1":
         timestamps.append(datetime.now())
         returnedList, results = blescan3.parse_events(sock, 10)
-        print(results)
         print("----------")
-        '''
         for beacon in returnedList:
             print(beacon)
-        '''
         scans.append(results)
     if control_flag == "2":
         continue
